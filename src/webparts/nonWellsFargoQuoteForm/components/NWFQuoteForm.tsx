@@ -35,8 +35,8 @@ let arrMilestones = [
     id: 10000,
     title: "Milestone-1",
     description: "",
-    startDate: "",
-    endDate: "",
+    startDate: new Date().toLocaleString(),
+    endDate: new Date().toLocaleString(),
     amount: "",
   },
 ];
@@ -108,6 +108,7 @@ let objValues = {
   AcceptedByTitle: "",
   StatementOfWork: "",
   Services: "",
+  AcceptedForClient: "",
 };
 let objSelectedServices = {
   JENEsysEDGE: [],
@@ -503,10 +504,6 @@ const NWFQuoteForm = (props) => {
     }
   };
   const submitBtnHandler = () => {
-    // console.log(formID);
-    // console.log(JSON.stringify(arrnwParts.filter((part) => part.isSelected)));
-    // console.log(JSON.stringify(arrMilestones));
-    // console.log(objValues);
     props.spcontext.web.lists
       .getByTitle("NWFQuoteRequestList")
       .items.getById(formID)
@@ -526,7 +523,12 @@ const NWFQuoteForm = (props) => {
         ConsultantName: objValues.ConsultantName,
         ConsultantPinCode: objValues.ConsultantPinCode,
         Date: objValues.Date,
-        Milestones: JSON.stringify(arrMilestones),
+        Milestones:
+          arrMilestones.length == 1
+            ? arrMilestones[0].description == ""
+              ? ""
+              : JSON.stringify(arrMilestones)
+            : "",
         Multiplier: objValues.Multiplier,
         ProjectDescription: objValues.ProjectDescription,
         ProposedBy: objValues.ProposedBy,
@@ -537,12 +539,14 @@ const NWFQuoteForm = (props) => {
         StatementOfWork: objValues.StatementOfWork,
         TypesOfProposal: objValues.TypesOfProposal,
         SentVia: objValues.SentVai,
+        AcceptedForClient: objValues.AcceptedForClient,
+        Status: "Order in production",
         ProposedServicesFees: JSON.stringify(
           arrnwParts.filter((part) => part.isSelected)
         ),
       })
       .then(() => {
-        // history.back();
+        history.back();
       })
       .catch((error) => console.log(error));
   };
@@ -585,6 +589,7 @@ const NWFQuoteForm = (props) => {
           label="Project No"
           styles={halfWidthInput}
           value={objValues.ProjectNo}
+          disabled={true}
         />
         <DatePicker
           styles={halfWidthInput}
@@ -2504,6 +2509,8 @@ const NWFQuoteForm = (props) => {
               label="Date"
               onSelectDate={(date) => {
                 objValues.ProposedDate = date;
+                console.log(objValues);
+
                 setRenderObjValue(true);
               }}
             />
@@ -2514,7 +2521,15 @@ const NWFQuoteForm = (props) => {
                 <h3 style={{ color: myTheme.palette.themePrimary }}>
                   Accepted for Client:
                 </h3>
-                <TextField styles={halfWidthInput} placeholder="Client Name" />
+                <TextField
+                  styles={halfWidthInput}
+                  placeholder="Client Name"
+                  value={objValues.AcceptedForClient}
+                  onChange={(e) => {
+                    objValues.AcceptedForClient = e.target["value"];
+                    setRenderObjValue(true);
+                  }}
+                />
               </div>
               <TextField
                 styles={halfWidthInput}
@@ -2619,6 +2634,7 @@ const NWFQuoteForm = (props) => {
                         firstDayOfWeek={firstDayOfWeek}
                         placeholder="Select a date..."
                         ariaLabel="Select a date"
+                        value={new Date(milestone.startDate)}
                         onSelectDate={(date) => {
                           arrMilestones.filter(
                             (item) => item.id == milestone.id
@@ -2634,6 +2650,7 @@ const NWFQuoteForm = (props) => {
                         ariaLabel="Select a date"
                         key={milestone.id}
                         id={`${milestone.id}`}
+                        value={new Date(milestone.endDate)}
                         onSelectDate={(date) => {
                           arrMilestones.filter(
                             (item) => item.id == milestone.id
@@ -2678,7 +2695,7 @@ const NWFQuoteForm = (props) => {
             style={{ marginRight: "0.5rem" }}
             onClick={submitBtnHandler}
           />
-          <DefaultButton text="Cancel" />
+          <DefaultButton text="Cancel" onClick={() => history.back()} />
         </div>
       </div>
 

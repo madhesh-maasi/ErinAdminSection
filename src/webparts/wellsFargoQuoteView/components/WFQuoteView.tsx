@@ -187,8 +187,8 @@ const WFQuoteView = (props) => {
           ProjNameInput: li.Title,
           DeliveryAddInput: li.ShippingAddress,
           projAreaInput: li.ProjectArea,
-          EstimateStartDateInput: li.StartDate,
-          EstimateEndDateInput: li.EndDate,
+          EstimateStartDateInput: new Date(li.StartDate),
+          EstimateEndDateInput: new Date(li.EndDate),
         };
         objVendorInfo = {
           companyNameInput: li.companyName,
@@ -257,6 +257,16 @@ const WFQuoteView = (props) => {
         <div style={{ fontWeight: "bold" }}>Order No: {orderNo}</div>
       </div>
       <h1 className={styles.heading}>Quote Form</h1>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          marginBottom: "1rem",
+        }}
+      >
+        <PrimaryButton text="Export Doc" style={{ marginRight: "1rem" }} />
+        <PrimaryButton text="Export Excel" />
+      </div>
       <div className={styles.quoteFormSectionOne}>
         <div className={styles.sectionOneSub} style={{ marginRight: "0.3rem" }}>
           <h3 className={styles.heading} style={{ margin: "0 0 0.5rem 0" }}>
@@ -304,6 +314,7 @@ const WFQuoteView = (props) => {
               firstDayOfWeek={firstDayOfWeek}
               placeholder="Select a date..."
               ariaLabel="Select a date"
+              value={objProjInfo.EstimateEndDateInput}
               // DatePicker uses English strings by default. For localized apps, you must override this prop.
               strings={defaultDatePickerStrings}
               styles={halfWidthInput}
@@ -318,6 +329,7 @@ const WFQuoteView = (props) => {
               strings={defaultDatePickerStrings}
               styles={halfWidthInput}
               disabled={true}
+              value={objProjInfo.EstimateEndDateInput}
             />
           </div>
         </div>

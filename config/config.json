@@ -49,6 +49,7 @@
     "WellsFargoQuoteFormWebPartStrings": "lib/webparts/wellsFargoQuoteForm/loc/{locale}.js",
     "WellsFargoQuoteViewWebPartStrings": "lib/webparts/wellsFargoQuoteView/loc/{locale}.js",
     "NonWellsFargoQuoteFormWebPartStrings": "lib/webparts/nonWellsFargoQuoteForm/loc/{locale}.js",
-    "NonWellsFargoQuoteViewWebPartStrings": "lib/webparts/nonWellsFargoQuoteView/loc/{locale}.js"
+    "NonWellsFargoQuoteViewWebPartStrings": "lib/webparts/nonWellsFargoQuoteView/loc/{locale}.js",
+    "ControlStrings": "node_modules/@pnp/spfx-controls-react/lib/loc/{locale}.js"
   }
 }

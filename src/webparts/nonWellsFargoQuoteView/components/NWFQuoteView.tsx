@@ -66,6 +66,7 @@ let objValues = {
   AcceptedByTitle: "",
   StatementOfWork: "",
   Services: "",
+  AcceptedForClient: "",
 };
 let objSelectedServices = {
   JENEsysEDGE: [],
@@ -189,7 +190,7 @@ const NWFQuoteView = (props) => {
           SentVai: li.SentVia,
           ProjectDescription: li.ProjectDescription,
           TypesOfProposal: li.TypesOfProposal,
-          Multiplier: li.Multiplier,
+          Multiplier: li.Multiplier ? li.Multiplier : 1,
           ProposedBy: li.ProposedBy,
           ProposedName: li.ProposedName,
           ProposedTitle: li.ProposedTitle,
@@ -200,6 +201,7 @@ const NWFQuoteView = (props) => {
           AcceptedByTitle: li.AcceptedByTitle,
           StatementOfWork: li.StatementOfWork,
           Services: li.Services,
+          AcceptedForClient: li.AcceptedForClient,
         };
         console.log(li);
         arrnwParts =
@@ -208,7 +210,9 @@ const NWFQuoteView = (props) => {
             : JSON.parse(li.ProposedServicesFees);
         console.log(JSON.parse(li.ProposedServicesFees));
 
-        arrMilestones = JSON.parse(li.Milestones);
+        arrMilestones =
+          li.Milestones && li.Milestones != "" ? JSON.parse(li.Milestones) : [];
+        console.log(arrMilestones);
         setRenderObjValue(true);
         setFetchPartsTable(true);
         setFetchTable(true);
@@ -268,6 +272,17 @@ const NWFQuoteView = (props) => {
         >
           Proposal of Services
         </h2>
+      </div>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          marginBottom: "1rem",
+        }}
+        className={styles.section}
+      >
+        <PrimaryButton text="Export Doc" style={{ marginRight: "1rem" }} />
+        <PrimaryButton text="Export Excel" />
       </div>
       <div className={`${styles.projectDetails} ${styles.section}`}>
         <TextField
@@ -519,7 +534,12 @@ const NWFQuoteView = (props) => {
               value={objValues.ProposedTitle}
               disabled={true}
             />
-            <DatePicker styles={halfWidthInput} label="Date" disabled={true} />
+            <DatePicker
+              value={objValues.ProposedDate}
+              styles={halfWidthInput}
+              label="Date"
+              disabled={true}
+            />
           </div>
           <div>
             <div>
@@ -531,6 +551,7 @@ const NWFQuoteView = (props) => {
                   styles={halfWidthInput}
                   placeholder="Client Name"
                   disabled={true}
+                  value={objValues.AcceptedForClient}
                 />
               </div>
               <TextField
@@ -552,6 +573,7 @@ const NWFQuoteView = (props) => {
                 disabled={true}
               />
               <DatePicker
+                value={objValues.AcceptedByDate}
                 styles={halfWidthInput}
                 label="Date"
                 disabled={true}
@@ -583,71 +605,74 @@ const NWFQuoteView = (props) => {
           />
         </div>
         {/* Milestone Section */}
-        <table className={styles.mileStoneTable}>
-          <thead>
-            <tr>
-              <th></th>
-              <th>Description of Deliverables</th>
-              <th>Estimated Start and End Date</th>
-              <th>Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            {milestones.map((milestone) => {
-              return (
-                <tr>
-                  <td>{milestone.title}</td>
-                  <td>
-                    <TextField
-                      key={milestone.id}
-                      id={`${milestone.id}`}
-                      styles={halfWidthInput}
-                      value={milestone.description}
-                      disabled={true}
-                    />
-                  </td>
-                  <td>
-                    <div style={{ display: "flex", alignItems: "center" }}>
-                      <DatePicker
-                        key={milestone.id}
-                        id={`${milestone.id}`}
-                        styles={{ root: { width: 100 } }}
-                        firstDayOfWeek={firstDayOfWeek}
-                        placeholder="Select a date..."
-                        ariaLabel="Select a date"
-                        disabled={true}
-                        // value={milestone.startDate}
-                      />
-                      -
-                      <DatePicker
-                        styles={{ root: { width: 100 } }}
-                        firstDayOfWeek={firstDayOfWeek}
-                        placeholder="Select a date..."
-                        ariaLabel="Select a date"
-                        key={milestone.id}
-                        id={`${milestone.id}`}
-                        disabled={true}
-                        // value={milestone.endDate}
-                      />
-                    </div>
-                  </td>
-                  <td>
-                    <TextField
-                      styles={halfWidthInput}
-                      value={milestone.amount}
-                      key={milestone.id}
-                      id={`${milestone.id}`}
-                      disabled={true}
-                    />
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        {milestones.length > 0 && (
+          <table className={styles.mileStoneTable}>
+            <thead>
+              <tr>
+                <th></th>
+                <th>Description of Deliverables</th>
+                <th>Estimated Start and End Date</th>
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {milestones.length > 0 &&
+                milestones.map((milestone) => {
+                  return (
+                    <tr>
+                      <td>{milestone.title}</td>
+                      <td>
+                        <TextField
+                          key={milestone.id}
+                          id={`${milestone.id}`}
+                          styles={halfWidthInput}
+                          value={milestone.description}
+                          disabled={true}
+                        />
+                      </td>
+                      <td>
+                        <div style={{ display: "flex", alignItems: "center" }}>
+                          <DatePicker
+                            key={milestone.id}
+                            id={`${milestone.id}`}
+                            styles={{ root: { width: 100 } }}
+                            firstDayOfWeek={firstDayOfWeek}
+                            placeholder="Select a date..."
+                            ariaLabel="Select a date"
+                            disabled={true}
+                            value={new Date(milestone.startDate)}
+                          />
+                          -
+                          <DatePicker
+                            styles={{ root: { width: 100 } }}
+                            firstDayOfWeek={firstDayOfWeek}
+                            placeholder="Select a date..."
+                            ariaLabel="Select a date"
+                            key={milestone.id}
+                            id={`${milestone.id}`}
+                            disabled={true}
+                            value={new Date(milestone.endDate)}
+                          />
+                        </div>
+                      </td>
+                      <td>
+                        <TextField
+                          styles={halfWidthInput}
+                          value={milestone.amount}
+                          key={milestone.id}
+                          id={`${milestone.id}`}
+                          disabled={true}
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
+            </tbody>
+          </table>
+        )}
         {/* Milestone Section */}
         <div className={styles.submitSection}>
-          <DefaultButton text="Cancel" onClick={() => history.back()} />
+          <DefaultButton text="Back" onClick={() => history.back()} />
         </div>
       </div>
 

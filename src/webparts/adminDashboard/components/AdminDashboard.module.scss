@@ -72,8 +72,17 @@
       display: inline-block;
     }
   }
+  .pagination {
+    margin: auto;
+  }
 }
 .dashboardHeader {
   display: flex;
   justify-content: space-between;
+}
+.noDataFound {
+  margin-top: 2rem;
+  text-align: center;
+  font-weight: bold;
+  font-size: 1.5rem;
 }

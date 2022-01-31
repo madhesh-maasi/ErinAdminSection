@@ -191,7 +191,7 @@ const WFQuoteForm = (props) => {
         setOrderNo(listItem.OrderNo);
         objProjInfo = {
           projNoInput: listItem.OrderNo,
-          projManagerInput: "Doubt",
+          projManagerInput: listItem.ManagerName,
           BENoInput: listItem.BENumber,
           ProjNameInput: listItem.Title,
           DeliveryAddInput: listItem.ShippingAddress,
@@ -312,40 +312,46 @@ const WFQuoteForm = (props) => {
   };
 
   const SubmitHandler = () => {
-    props.spcontext.web.lists
-      .getByTitle("WFQuoteRequestList")
-      .items.getById(formID)
-      .update({
-        // install
-        installationDetails: JSON.stringify(arrInstall),
-        // Proj
-        OrderNo: objProjInfo.projNoInput,
-        ManagerName: objProjInfo.projManagerInput,
-        BENumber: objProjInfo.BENoInput,
-        Title: objProjInfo.ProjNameInput,
-        ShippingAddress: objProjInfo.DeliveryAddInput,
-        ProjectArea: objProjInfo.projAreaInput,
-        StartDate: objProjInfo.EstimateStartDateInput,
-        EndDate: objProjInfo.EstimateEndDateInput,
-        // vendor
-        companyName: objVendorInfo.companyNameInput,
-        wfVendorNo: objVendorInfo.wfVendorNoInput,
-        proposalNo: objVendorInfo.proposalNoInput,
-        cityStateZip: objVendorInfo.cityStateZipInput,
-        wfContractNo: objVendorInfo.wfContractNoInput,
-        contactName: objVendorInfo.contactNameInput,
-        changeOrder: objVendorInfo.changeOrderInput,
-        phoneNo: objVendorInfo.phoneNoInput,
-        changeOrderPO: objVendorInfo.changeOrderPOInput,
-        cell: objVendorInfo.cellInput,
-        remitToAddress: objVendorInfo.remitAddInput,
-        emailID: objVendorInfo.emailIdInput,
-        // tax Info
-        taxesInfo: JSON.stringify(objTaxes),
-        Status: "PO received order entered into production queue",
-      })
-      .catch((error) => console.log(error));
-    history.back();
+    try {
+      props.spcontext.web.lists
+        .getByTitle("WFQuoteRequestList")
+        .items.getById(formID)
+        .update({
+          // install
+          installationDetails: JSON.stringify(arrInstall),
+          // Proj
+          OrderNo: objProjInfo.projNoInput,
+          ManagerName: objProjInfo.projManagerInput,
+          BENumber: objProjInfo.BENoInput,
+          Title: objProjInfo.ProjNameInput,
+          ShippingAddress: objProjInfo.DeliveryAddInput,
+          ProjectArea: objProjInfo.projAreaInput,
+          StartDate: objProjInfo.EstimateStartDateInput,
+          EndDate: objProjInfo.EstimateEndDateInput,
+          // vendor
+          companyName: objVendorInfo.companyNameInput,
+          wfVendorNo: objVendorInfo.wfVendorNoInput,
+          proposalNo: objVendorInfo.proposalNoInput,
+          cityStateZip: objVendorInfo.cityStateZipInput,
+          wfContractNo: objVendorInfo.wfContractNoInput,
+          contactName: objVendorInfo.contactNameInput,
+          changeOrder: objVendorInfo.changeOrderInput,
+          phoneNo: objVendorInfo.phoneNoInput,
+          changeOrderPO: objVendorInfo.changeOrderPOInput,
+          cell: objVendorInfo.cellInput,
+          remitToAddress: objVendorInfo.remitAddInput,
+          emailID: objVendorInfo.emailIdInput,
+          // tax Info
+          taxesInfo: JSON.stringify(objTaxes),
+          Status: "Order in production",
+        })
+        .then((data) => console.log(data))
+        //
+        .catch((error) => console.log(error))
+        .then(() => history.back());
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
