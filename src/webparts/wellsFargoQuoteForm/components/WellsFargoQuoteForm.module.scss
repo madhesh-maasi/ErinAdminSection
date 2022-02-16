@@ -133,3 +133,10 @@
   width: 50%;
   margin: auto;
 }
+.peoplePickerSection {
+  width: 50%;
+  margin: 0 1rem 0.5rem 0;
+  > div {
+    width: 100%;
+  }
+}

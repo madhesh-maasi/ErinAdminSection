@@ -34,12 +34,25 @@ import {
   IChoiceGroupOption,
 } from "@fluentui/react/lib/ChoiceGroup";
 import { Icon } from "office-ui-fabric-react/lib/Icon";
+import {
+  IPersonaSharedProps,
+  Persona,
+  PersonaSize,
+  PersonaPresence,
+} from "@fluentui/react/lib/Persona";
+
 let allItems = [];
 let constructedItems = [];
 let statusOptions: IDropdownOption[] = [];
 let currID;
 let currentpage = 1;
 var totalPage = 30;
+let financeGroup = [];
+let isUserInFinance = false;
+let siteAbsoluteUrl = `https://${window.location.href.split("/")[2]}`;
+let siteUrl = `https://${window.location.href.split("/")[2]}/sites/${
+  window.location.href.split("/")[4]
+}`;
 const dropdownStyles: Partial<IDropdownStyles> = {
   dropdown: { width: 300 },
 };
@@ -130,7 +143,24 @@ const App = (props) => {
             title: choice,
           });
         });
-
+        let currentUserInfo = "";
+        await props.graphcontext.me.get().then((curUser) => {
+          currentUserInfo = curUser;
+        });
+        await props.spcontext.web.siteGroups
+          .getByName("FinanceGroup")
+          .users()
+          .then((fGroup) => {
+            financeGroup = fGroup.map((group) => {
+              return group.UserPrincipalName;
+            });
+            isUserInFinance =
+              financeGroup.filter(
+                (users) =>
+                  users.toLowerCase() ==
+                  currentUserInfo["userPrincipalName"].toLowerCase()
+              ).length > 0;
+          });
         await props.spcontext.web.lists
           .getByTitle("WFQuoteRequestList")
           .items.select("*,UserDetails/Title,UserDetails/EMail")
@@ -139,15 +169,12 @@ const App = (props) => {
           .get()
           .then((wfItems: any) => {
             console.log(wfItems);
-
             wfItems.forEach((wfItem) => {
               allItems.push({
                 ID: wfItem.ID,
                 ClientName: "Wells Fargo",
                 OrderNo: wfItem.OrderNo,
-                AssignedTo: wfItem.UserDetails
-                  ? wfItem.UserDetails[0].Title
-                  : "",
+                AssignedTo: wfItem.UserDetails ? wfItem.UserDetails : "",
                 StartDate: wfItem.StartDate
                   ? new Date(wfItem.StartDate).toLocaleDateString()
                   : "",
@@ -158,6 +185,7 @@ const App = (props) => {
                 Quote: "",
                 InternalForm: "",
                 ProjectNo: wfItem.ProjectNo,
+                Modified: new Date(wfItem.Modified).toLocaleDateString(),
               });
             });
           })
@@ -172,27 +200,31 @@ const App = (props) => {
                 nwfItems.forEach((nwfItem) => {
                   allItems.push({
                     ID: nwfItem.ID,
-                    ClientName: "Non Wells Fargo",
+                    ClientName: nwfItem.CompanyName,
                     OrderNo: nwfItem.OrderNo,
-                    AssignedTo: nwfItem.UserDetails
-                      ? nwfItem.UserDetails[0].Title
-                      : "",
+                    AssignedTo: nwfItem.UserDetails ? nwfItem.UserDetails : "",
                     StartDate: nwfItem.StartDate,
                     EndDate: nwfItem.EndDate,
                     Status: nwfItem.Status,
                     Quote: "",
                     InternalForm: "",
                     ProjectNo: nwfItem.ProjectNo,
+                    Modified: new Date(nwfItem.Modified).toLocaleDateString(),
                   });
                 });
               });
+            allItems = allItems.sort((a, b) => {
+              var dateA = new Date(a.Modified).getTime();
+              var dateB = new Date(b.Modified).getTime();
+              return dateA < dateB ? 1 : -1; // ? -1 : 1 for ascending/increasing order
+            });
+            console.log(allItems);
             await setFetchList(true);
           });
       })
       .catch(function (error) {
         console.log(error);
       });
-    console.log(allItems);
   }, []);
 
   // TODO Table Construction
@@ -203,7 +235,20 @@ const App = (props) => {
           ID: lItem.ID,
           ClientName: lItem.ClientName,
           OrderNo: lItem.OrderNo,
-          AssignedTo: lItem.AssignedTo,
+          AssignedTo: lItem.AssignedTo ? (
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <Persona
+                imageUrl={
+                  "/_layouts/15/userphoto.aspx?size=S&username=" +
+                  lItem.AssignedTo[0].EMail
+                }
+                text={lItem.AssignedTo[0].Title}
+                size={PersonaSize.size32}
+              />
+            </div>
+          ) : (
+            <div style={{ width: "100%", textAlign: "center" }}>N/A</div>
+          ),
           StartDate: lItem.StartDate
             ? new Date(lItem.StartDate).toLocaleDateString()
             : "N/A",
@@ -328,26 +373,30 @@ const App = (props) => {
             />
           ),
           ProjectNo: !lItem.ProjectNo ? (
-            <Icon
-              id={`${lItem.ID}`}
-              iconName="Edit"
-              styles={{
-                root: {
-                  fontSize: 24,
-                  fontWeight: 400,
-                  cursor: "pointer",
-                  color:
-                    lItem.ClientName == "Wells Fargo" ? "#d71e2b" : "#004FA2",
-                },
-              }}
-              onClick={(e) => {
-                currID = e.target["id"];
-                toggleHideDialog();
-                lItem.ClientName == "Wells Fargo"
-                  ? setIsWFItem(true)
-                  : setIsWFItem(false);
-              }}
-            />
+            isUserInFinance ? (
+              <Icon
+                id={`${lItem.ID}`}
+                iconName="Edit"
+                styles={{
+                  root: {
+                    fontSize: 24,
+                    fontWeight: 400,
+                    cursor: "pointer",
+                    color:
+                      lItem.ClientName == "Wells Fargo" ? "#d71e2b" : "#004FA2",
+                  },
+                }}
+                onClick={(e) => {
+                  currID = e.target["id"];
+                  toggleHideDialog();
+                  lItem.ClientName == "Wells Fargo"
+                    ? setIsWFItem(true)
+                    : setIsWFItem(false);
+                }}
+              />
+            ) : (
+              ""
+            )
           ) : (
             lItem.ProjectNo
           ),
@@ -361,11 +410,13 @@ const App = (props) => {
   const companyDropdownChangeHandler = (selectedItem) => {
     console.log(selectedItem);
     selectedItem.text != "All"
-      ? setItems(
-          constructedItems.filter(
-            (item) => item.ClientName === selectedItem.text
+      ? selectedItem.text == "Wells Fargo"
+        ? setItems(
+            constructedItems.filter((item) => item.ClientName == "Wells Fargo")
           )
-        )
+        : setItems(
+            constructedItems.filter((item) => item.ClientName != "Wells Fargo")
+          )
       : setItems(constructedItems);
   };
 
@@ -389,8 +440,8 @@ const App = (props) => {
       key: "2",
       name: "Assigned To",
       fieldName: "AssignedTo",
-      minWidth: 100,
-      maxWidth: 120,
+      minWidth: 150,
+      maxWidth: 160,
       isRowHeader: true,
       isResizable: true,
       isSorted: true,
@@ -419,8 +470,8 @@ const App = (props) => {
       key: "4",
       name: "Start Date",
       fieldName: "StartDate",
-      minWidth: 80,
-      maxWidth: 100,
+      minWidth: 50,
+      maxWidth: 50,
       isRowHeader: true,
       isResizable: true,
       isSorted: true,
@@ -434,8 +485,8 @@ const App = (props) => {
       key: "5",
       name: "End Date",
       fieldName: "EndDate",
-      minWidth: 80,
-      maxWidth: 100,
+      minWidth: 50,
+      maxWidth: 50,
       isRowHeader: true,
       isResizable: true,
       isSorted: true,
@@ -532,7 +583,7 @@ const App = (props) => {
         />
         <SearchBox
           styles={searchBoxStyles}
-          placeholder="Search"
+          placeholder="Search order no."
           onChange={(_, newValue) =>
             setItems(
               newValue
@@ -627,5 +678,14 @@ const App = (props) => {
     currentpage = pagenumber;
     setItems([...paginatedItems]);
   }
+};
+const getMyPictureUrl = (webUrl, accountName, size) => {
+  return (
+    webUrl +
+    "/_layouts/15/userphoto.aspx?size=" +
+    size +
+    "&accountname=" +
+    accountName
+  );
 };
 export default App;

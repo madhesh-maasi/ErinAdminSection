@@ -117,21 +117,33 @@
     th:not(:first-child) {
       width: 3rem;
     }
-    th:first-child {
+    th:first-child,
+    th:nth-child(4),
+    th:nth-child(5) {
       width: 1rem;
+    }
+    th:nth-child(6) {
+      min-width: 7rem;
     }
   }
 }
 .mileStone {
   margin: auto;
+  width: 90%;
   thead {
     th {
       padding: 1rem;
       background-color: #d3e4f6;
     }
+    th:last-child {
+      width: 1rem;
+    }
   }
   td {
     padding: 0.5rem;
+  }
+  td:last-child {
+    width: 1rem;
   }
 }
 .selectedItem {

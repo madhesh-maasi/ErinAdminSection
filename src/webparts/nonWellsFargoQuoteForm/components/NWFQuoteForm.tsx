@@ -1,9 +1,13 @@
 import * as React from "react";
 import styles from "./NonWellsFargoQuoteForm.module.scss";
-import { Fragment } from "react";
+import { Fragment, useCallback } from "react";
 import { useState, useEffect, useRef } from "react";
 import { Icon, IIconProps } from "@fluentui/react/lib/Icon";
-import { DefaultButton, PrimaryButton } from "@fluentui/react/lib/Button";
+import {
+  ActionButton,
+  DefaultButton,
+  PrimaryButton,
+} from "@fluentui/react/lib/Button";
 import { TextField, MaskedTextField } from "@fluentui/react/lib/TextField";
 import {
   DatePicker,
@@ -28,8 +32,17 @@ let formID = 0;
 const paramsString = window.location.href.split("?")[1].toLowerCase();
 const searchParams = new URLSearchParams(paramsString);
 searchParams.has("formid") ? (formID = Number(searchParams.get("formid"))) : "";
+
 const addIcon: IIconProps = { iconName: "Add" };
 
+const choiceGroupStyles = {
+  flexContainer: {
+    display: "flex",
+    label: {
+      marginRight: "1rem",
+    },
+  },
+};
 let arrMilestones = [
   {
     id: 10000,
@@ -97,7 +110,7 @@ let objValues = {
   SentVai: "",
   ProjectDescription: "",
   TypesOfProposal: "",
-  Multiplier: "",
+  Multiplier: "1",
   ProposedBy: "",
   ProposedName: "",
   ProposedTitle: "",
@@ -170,6 +183,7 @@ const halfWidthInput = {
 };
 let arrSentViaOptions = [];
 let arrTypesOfProposal = [];
+
 const NWFQuoteForm = (props) => {
   const [firstDayOfWeek, setFirstDayOfWeek] = useState(DayOfWeek.Sunday);
   const [selectedKey, setSelectedKey] = useState(1);
@@ -185,6 +199,8 @@ const NWFQuoteForm = (props) => {
   const [typesOfProposalOptions, setTypesOfProposalOptions] =
     useState(arrTypesOfProposal);
   const [partsCount, setPartsCount] = useState(arrPartsCount);
+  const [dateValue, setDateValue] = useState<Date | undefined>();
+
   useEffect(() => {
     props.spcontext.web.lists
       .getByTitle("NWFQuoteRequestList")
@@ -233,6 +249,7 @@ const NWFQuoteForm = (props) => {
             id: i,
           };
         });
+        console.log(arrnwParts);
         setPartsDetails(arrnwParts);
       })
       .then(async () => {
@@ -287,8 +304,8 @@ const NWFQuoteForm = (props) => {
       id: newId,
       title: title,
       description: "",
-      startDate: "",
-      endDate: "",
+      startDate: new Date().toLocaleString(),
+      endDate: new Date().toLocaleString(),
       amount: "",
     });
     setFetchTable(true);
@@ -503,6 +520,15 @@ const NWFQuoteForm = (props) => {
       setFetchSelectedServices(true);
     }
   };
+  const listPriceChangeHandler = (id, value) => {
+    console.log(id, value);
+    let updateItem = arrnwParts.filter((part) => part.id == id)[0];
+    updateItem.ListPrice = value;
+    +objValues.Multiplier > 0
+      ? (updateItem.NetPrice = value * +objValues.Multiplier)
+      : (updateItem.NetPrice = value);
+    setFetchTable(true);
+  };
   const submitBtnHandler = () => {
     props.spcontext.web.lists
       .getByTitle("NWFQuoteRequestList")
@@ -556,6 +582,7 @@ const NWFQuoteForm = (props) => {
   const onPrevClick = () => {
     selectedKey > 1 ? setSelectedKey(selectedKey - 1) : "";
   };
+
   return (
     <div style={{ backgroundColor: "#F2F2F2", padding: "1rem 2rem" }}>
       <div className={styles.formHeader}>
@@ -597,7 +624,18 @@ const NWFQuoteForm = (props) => {
           firstDayOfWeek={firstDayOfWeek}
           placeholder="Select a date..."
           ariaLabel="Select a date"
+          formatDate={(date: Date): string => {
+            return (
+              date.getMonth() +
+              1 +
+              "/" +
+              date.getDate() +
+              "/" +
+              date.getFullYear()
+            );
+          }}
           onSelectDate={(date) => {
+            setDateValue as (date?: Date) => void;
             objValues.Date = date;
           }}
         />
@@ -727,6 +765,7 @@ const NWFQuoteForm = (props) => {
         <div>
           <ChoiceGroup
             options={sentViaOptions}
+            styles={choiceGroupStyles}
             label="Sent Via:"
             onChange={(e, selected) => (objValues.SentVai = selected.key)}
           />
@@ -759,6 +798,7 @@ const NWFQuoteForm = (props) => {
           <ChoiceGroup
             options={typesOfProposalOptions}
             label="Types of proposal"
+            styles={choiceGroupStyles}
             onChange={(e, selected) => {
               console.log(selected.key);
 
@@ -862,7 +902,15 @@ const NWFQuoteForm = (props) => {
                             </label>
                           </td>
                           <td style={{ textAlign: "center" }}>
-                            {part.ListPrice}
+                            <TextField
+                              resizable={false}
+                              value={`${part.ListPrice}`}
+                              onChange={(e) => {
+                                let updateID = part.id;
+                                let updateValue = e.target["value"];
+                                listPriceChangeHandler(updateID, +updateValue);
+                              }}
+                            />
                           </td>
                           <td style={{ textAlign: "center" }}>
                             {part.NetPrice}
@@ -928,7 +976,15 @@ const NWFQuoteForm = (props) => {
                             </label>
                           </td>
                           <td style={{ textAlign: "center" }}>
-                            {part.ListPrice}
+                            <TextField
+                              resizable={false}
+                              value={`${part.ListPrice}`}
+                              onChange={(e) => {
+                                let updateID = part.id;
+                                let updateValue = e.target["value"];
+                                listPriceChangeHandler(updateID, +updateValue);
+                              }}
+                            />
                           </td>
                           <td style={{ textAlign: "center" }}>
                             {part.NetPrice}
@@ -994,7 +1050,15 @@ const NWFQuoteForm = (props) => {
                             </label>
                           </td>
                           <td style={{ textAlign: "center" }}>
-                            {part.ListPrice}
+                            <TextField
+                              resizable={false}
+                              value={`${part.ListPrice}`}
+                              onChange={(e) => {
+                                let updateID = part.id;
+                                let updateValue = e.target["value"];
+                                listPriceChangeHandler(updateID, +updateValue);
+                              }}
+                            />{" "}
                           </td>
                           <td style={{ textAlign: "center" }}>
                             {part.NetPrice}
@@ -1061,7 +1125,15 @@ const NWFQuoteForm = (props) => {
                             </label>
                           </td>
                           <td style={{ textAlign: "center" }}>
-                            {part.ListPrice}
+                            <TextField
+                              resizable={false}
+                              value={`${part.ListPrice}`}
+                              onChange={(e) => {
+                                let updateID = part.id;
+                                let updateValue = e.target["value"];
+                                listPriceChangeHandler(updateID, +updateValue);
+                              }}
+                            />{" "}
                           </td>
                           <td style={{ textAlign: "center" }}>
                             {part.NetPrice}
@@ -1127,7 +1199,15 @@ const NWFQuoteForm = (props) => {
                             </label>
                           </td>
                           <td style={{ textAlign: "center" }}>
-                            {part.ListPrice}
+                            <TextField
+                              resizable={false}
+                              value={`${part.ListPrice}`}
+                              onChange={(e) => {
+                                let updateID = part.id;
+                                let updateValue = e.target["value"];
+                                listPriceChangeHandler(updateID, +updateValue);
+                              }}
+                            />{" "}
                           </td>
                           <td style={{ textAlign: "center" }}>
                             {part.NetPrice}
@@ -1193,7 +1273,15 @@ const NWFQuoteForm = (props) => {
                             </label>
                           </td>
                           <td style={{ textAlign: "center" }}>
-                            {part.ListPrice}
+                            <TextField
+                              resizable={false}
+                              value={`${part.ListPrice}`}
+                              onChange={(e) => {
+                                let updateID = part.id;
+                                let updateValue = e.target["value"];
+                                listPriceChangeHandler(updateID, +updateValue);
+                              }}
+                            />{" "}
                           </td>
                           <td style={{ textAlign: "center" }}>
                             {part.NetPrice}
@@ -1259,7 +1347,15 @@ const NWFQuoteForm = (props) => {
                             </label>
                           </td>
                           <td style={{ textAlign: "center" }}>
-                            {part.ListPrice}
+                            <TextField
+                              resizable={false}
+                              value={`${part.ListPrice}`}
+                              onChange={(e) => {
+                                let updateID = part.id;
+                                let updateValue = e.target["value"];
+                                listPriceChangeHandler(updateID, +updateValue);
+                              }}
+                            />{" "}
                           </td>
                           <td style={{ textAlign: "center" }}>
                             {part.NetPrice}
@@ -1325,7 +1421,15 @@ const NWFQuoteForm = (props) => {
                             </label>
                           </td>
                           <td style={{ textAlign: "center" }}>
-                            {part.ListPrice}
+                            <TextField
+                              resizable={false}
+                              value={`${part.ListPrice}`}
+                              onChange={(e) => {
+                                let updateID = part.id;
+                                let updateValue = e.target["value"];
+                                listPriceChangeHandler(updateID, +updateValue);
+                              }}
+                            />{" "}
                           </td>
                           <td style={{ textAlign: "center" }}>
                             {part.NetPrice}
@@ -1395,7 +1499,15 @@ const NWFQuoteForm = (props) => {
                             </label>
                           </td>
                           <td style={{ textAlign: "center" }}>
-                            {part.ListPrice}
+                            <TextField
+                              resizable={false}
+                              value={`${part.ListPrice}`}
+                              onChange={(e) => {
+                                let updateID = part.id;
+                                let updateValue = e.target["value"];
+                                listPriceChangeHandler(updateID, +updateValue);
+                              }}
+                            />{" "}
                           </td>
                           <td style={{ textAlign: "center" }}>
                             {part.NetPrice}
@@ -1461,7 +1573,15 @@ const NWFQuoteForm = (props) => {
                             </label>
                           </td>
                           <td style={{ textAlign: "center" }}>
-                            {part.ListPrice}
+                            <TextField
+                              resizable={false}
+                              value={`${part.ListPrice}`}
+                              onChange={(e) => {
+                                let updateID = part.id;
+                                let updateValue = e.target["value"];
+                                listPriceChangeHandler(updateID, +updateValue);
+                              }}
+                            />{" "}
                           </td>
                           <td style={{ textAlign: "center" }}>
                             {part.NetPrice}
@@ -1527,7 +1647,15 @@ const NWFQuoteForm = (props) => {
                             </label>
                           </td>
                           <td style={{ textAlign: "center" }}>
-                            {part.ListPrice}
+                            <TextField
+                              resizable={false}
+                              value={`${part.ListPrice}`}
+                              onChange={(e) => {
+                                let updateID = part.id;
+                                let updateValue = e.target["value"];
+                                listPriceChangeHandler(updateID, +updateValue);
+                              }}
+                            />{" "}
                           </td>
                           <td style={{ textAlign: "center" }}>
                             {part.NetPrice}
@@ -1593,7 +1721,15 @@ const NWFQuoteForm = (props) => {
                             </label>
                           </td>
                           <td style={{ textAlign: "center" }}>
-                            {part.ListPrice}
+                            <TextField
+                              resizable={false}
+                              value={`${part.ListPrice}`}
+                              onChange={(e) => {
+                                let updateID = part.id;
+                                let updateValue = e.target["value"];
+                                listPriceChangeHandler(updateID, +updateValue);
+                              }}
+                            />{" "}
                           </td>
                           <td style={{ textAlign: "center" }}>
                             {part.NetPrice}
@@ -1648,7 +1784,15 @@ const NWFQuoteForm = (props) => {
                             </label>
                           </td>
                           <td style={{ textAlign: "center" }}>
-                            {part.ListPrice}
+                            <TextField
+                              resizable={false}
+                              value={`${part.ListPrice}`}
+                              onChange={(e) => {
+                                let updateID = part.id;
+                                let updateValue = e.target["value"];
+                                listPriceChangeHandler(updateID, +updateValue);
+                              }}
+                            />{" "}
                           </td>
                           <td style={{ textAlign: "center" }}>
                             {part.NetPrice}
@@ -1699,7 +1843,15 @@ const NWFQuoteForm = (props) => {
                           </td>
                           <td>{part.PartDescriptionSort}</td>
                           <td style={{ textAlign: "center" }}>
-                            {part.ListPrice}
+                            <TextField
+                              resizable={false}
+                              value={`${part.ListPrice}`}
+                              onChange={(e) => {
+                                let updateID = part.id;
+                                let updateValue = e.target["value"];
+                                listPriceChangeHandler(updateID, +updateValue);
+                              }}
+                            />{" "}
                           </td>
                           <td style={{ textAlign: "center" }}>
                             {part.NetPrice}
@@ -1761,7 +1913,15 @@ const NWFQuoteForm = (props) => {
                           </td>
                           <td>{part.PartDescriptionSort}</td>
                           <td style={{ textAlign: "center" }}>
-                            {part.ListPrice}
+                            <TextField
+                              resizable={false}
+                              value={`${part.ListPrice}`}
+                              onChange={(e) => {
+                                let updateID = part.id;
+                                let updateValue = e.target["value"];
+                                listPriceChangeHandler(updateID, +updateValue);
+                              }}
+                            />{" "}
                           </td>
                           <td style={{ textAlign: "center" }}>
                             {part.NetPrice}
@@ -1829,7 +1989,15 @@ const NWFQuoteForm = (props) => {
                           </td>
                           <td>{part.PartDescriptionSort}</td>
                           <td style={{ textAlign: "center" }}>
-                            {part.ListPrice}
+                            <TextField
+                              resizable={false}
+                              value={`${part.ListPrice}`}
+                              onChange={(e) => {
+                                let updateID = part.id;
+                                let updateValue = e.target["value"];
+                                listPriceChangeHandler(updateID, +updateValue);
+                              }}
+                            />{" "}
                           </td>
                           <td style={{ textAlign: "center" }}>
                             {part.NetPrice}
@@ -1891,7 +2059,15 @@ const NWFQuoteForm = (props) => {
                           </td>
                           <td>{part.PartDescriptionSort}</td>
                           <td style={{ textAlign: "center" }}>
-                            {part.ListPrice}
+                            <TextField
+                              resizable={false}
+                              value={`${part.ListPrice}`}
+                              onChange={(e) => {
+                                let updateID = part.id;
+                                let updateValue = e.target["value"];
+                                listPriceChangeHandler(updateID, +updateValue);
+                              }}
+                            />{" "}
                           </td>
                           <td style={{ textAlign: "center" }}>
                             {part.NetPrice}
@@ -1953,7 +2129,15 @@ const NWFQuoteForm = (props) => {
                           </td>
                           <td>{part.PartDescriptionSort}</td>
                           <td style={{ textAlign: "center" }}>
-                            {part.ListPrice}
+                            <TextField
+                              resizable={false}
+                              value={`${part.ListPrice}`}
+                              onChange={(e) => {
+                                let updateID = part.id;
+                                let updateValue = e.target["value"];
+                                listPriceChangeHandler(updateID, +updateValue);
+                              }}
+                            />{" "}
                           </td>
                           <td style={{ textAlign: "center" }}>
                             {part.NetPrice}
@@ -2015,7 +2199,15 @@ const NWFQuoteForm = (props) => {
                           </td>
                           <td>{part.PartDescriptionSort}</td>
                           <td style={{ textAlign: "center" }}>
-                            {part.ListPrice}
+                            <TextField
+                              resizable={false}
+                              value={`${part.ListPrice}`}
+                              onChange={(e) => {
+                                let updateID = part.id;
+                                let updateValue = e.target["value"];
+                                listPriceChangeHandler(updateID, +updateValue);
+                              }}
+                            />{" "}
                           </td>
                           <td style={{ textAlign: "center" }}>
                             {part.NetPrice}
@@ -2077,7 +2269,15 @@ const NWFQuoteForm = (props) => {
                           </td>
                           <td>{part.PartDescriptionSort}</td>
                           <td style={{ textAlign: "center" }}>
-                            {part.ListPrice}
+                            <TextField
+                              resizable={false}
+                              value={`${part.ListPrice}`}
+                              onChange={(e) => {
+                                let updateID = part.id;
+                                let updateValue = e.target["value"];
+                                listPriceChangeHandler(updateID, +updateValue);
+                              }}
+                            />{" "}
                           </td>
                           <td style={{ textAlign: "center" }}>
                             {part.NetPrice}
@@ -2139,7 +2339,15 @@ const NWFQuoteForm = (props) => {
                           </td>
                           <td>{part.PartDescriptionSort}</td>
                           <td style={{ textAlign: "center" }}>
-                            {part.ListPrice}
+                            <TextField
+                              resizable={false}
+                              value={`${part.ListPrice}`}
+                              onChange={(e) => {
+                                let updateID = part.id;
+                                let updateValue = e.target["value"];
+                                listPriceChangeHandler(updateID, +updateValue);
+                              }}
+                            />{" "}
                           </td>
                           <td style={{ textAlign: "center" }}>
                             {part.NetPrice}
@@ -2201,7 +2409,15 @@ const NWFQuoteForm = (props) => {
                           </td>
                           <td>{part.PartDescriptionSort}</td>
                           <td style={{ textAlign: "center" }}>
-                            {part.ListPrice}
+                            <TextField
+                              resizable={false}
+                              value={`${part.ListPrice}`}
+                              onChange={(e) => {
+                                let updateID = part.id;
+                                let updateValue = e.target["value"];
+                                listPriceChangeHandler(updateID, +updateValue);
+                              }}
+                            />{" "}
                           </td>
                           <td style={{ textAlign: "center" }}>
                             {part.NetPrice}
@@ -2263,7 +2479,15 @@ const NWFQuoteForm = (props) => {
                           </td>
                           <td>{part.PartDescriptionSort}</td>
                           <td style={{ textAlign: "center" }}>
-                            {part.ListPrice}
+                            <TextField
+                              resizable={false}
+                              value={`${part.ListPrice}`}
+                              onChange={(e) => {
+                                let updateID = part.id;
+                                let updateValue = e.target["value"];
+                                listPriceChangeHandler(updateID, +updateValue);
+                              }}
+                            />{" "}
                           </td>
                           <td style={{ textAlign: "center" }}>
                             {part.NetPrice}
@@ -2325,7 +2549,15 @@ const NWFQuoteForm = (props) => {
                           </td>
                           <td>{part.PartDescriptionSort}</td>
                           <td style={{ textAlign: "center" }}>
-                            {part.ListPrice}
+                            <TextField
+                              resizable={false}
+                              value={`${part.ListPrice}`}
+                              onChange={(e) => {
+                                let updateID = part.id;
+                                let updateValue = e.target["value"];
+                                listPriceChangeHandler(updateID, +updateValue);
+                              }}
+                            />{" "}
                           </td>
                           <td style={{ textAlign: "center" }}>
                             {part.NetPrice}
@@ -2387,7 +2619,15 @@ const NWFQuoteForm = (props) => {
                           </td>
                           <td>{part.PartDescriptionSort}</td>
                           <td style={{ textAlign: "center" }}>
-                            {part.ListPrice}
+                            <TextField
+                              resizable={false}
+                              value={`${part.ListPrice}`}
+                              onChange={(e) => {
+                                let updateID = part.id;
+                                let updateValue = e.target["value"];
+                                listPriceChangeHandler(updateID, +updateValue);
+                              }}
+                            />{" "}
                           </td>
                           <td style={{ textAlign: "center" }}>
                             {part.NetPrice}
@@ -2440,7 +2680,15 @@ const NWFQuoteForm = (props) => {
                           </td>
                           <td>{part.PartDescriptionSort}</td>
                           <td style={{ textAlign: "center" }}>
-                            {part.ListPrice}
+                            <TextField
+                              resizable={false}
+                              value={`${part.ListPrice}`}
+                              onChange={(e) => {
+                                let updateID = part.id;
+                                let updateValue = e.target["value"];
+                                listPriceChangeHandler(updateID, +updateValue);
+                              }}
+                            />{" "}
                           </td>
                           <td style={{ textAlign: "center" }}>
                             {part.NetPrice}
@@ -2456,16 +2704,23 @@ const NWFQuoteForm = (props) => {
           </Pivot>
         </ThemeProvider>
         <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <DefaultButton
-            text="before"
+          <ActionButton
+            iconProps={{ iconName: "DoubleChevronLeft8" }}
+            allowDisabledFocus
             onClick={onPrevClick}
             disabled={selectedKey == 1 ? true : false}
-          />
-          <DefaultButton
-            text="after"
+          >
+            Before
+          </ActionButton>
+          <ActionButton
+            styles={{ flexContainer: { flexDirection: "row-reverse" } }}
+            iconProps={{ iconName: "DoubleChevronRight8" }}
+            allowDisabledFocus
             onClick={onNextClick}
             disabled={selectedKey == 26 ? true : false}
-          />
+          >
+            After
+          </ActionButton>
         </div>
         {/* Pivot */}
         {/*  Pivot Section End */}
@@ -2474,7 +2729,11 @@ const NWFQuoteForm = (props) => {
       <div className={styles.section}>
         <div style={{ display: "flex", justifyContent: "space-between" }}>
           <div>
-            <h3 style={{ color: myTheme.palette.themePrimary }}>
+            <h3
+              style={{
+                color: myTheme.palette.themePrimary,
+              }}
+            >
               Proposed for Consultant: Lynxspring, Inc
             </h3>
             <TextField
@@ -2507,10 +2766,19 @@ const NWFQuoteForm = (props) => {
             <DatePicker
               styles={halfWidthInput}
               label="Date"
+              formatDate={(date: Date): string => {
+                return (
+                  date.getMonth() +
+                  1 +
+                  "/" +
+                  date.getDate() +
+                  "/" +
+                  date.getFullYear()
+                );
+              }}
               onSelectDate={(date) => {
                 objValues.ProposedDate = date;
                 console.log(objValues);
-
                 setRenderObjValue(true);
               }}
             />
@@ -2518,11 +2786,16 @@ const NWFQuoteForm = (props) => {
           <div>
             <div>
               <div style={{ display: "flex", alignItems: "center" }}>
-                <h3 style={{ color: myTheme.palette.themePrimary }}>
+                <h3
+                  style={{
+                    color: myTheme.palette.themePrimary,
+                    marginRight: "0.5rem",
+                  }}
+                >
                   Accepted for Client:
                 </h3>
                 <TextField
-                  styles={halfWidthInput}
+                  styles={{ root: { width: 200 } }}
                   placeholder="Client Name"
                   value={objValues.AcceptedForClient}
                   onChange={(e) => {
@@ -2559,6 +2832,16 @@ const NWFQuoteForm = (props) => {
                 }}
               />
               <DatePicker
+                formatDate={(date: Date): string => {
+                  return (
+                    date.getMonth() +
+                    1 +
+                    "/" +
+                    date.getDate() +
+                    "/" +
+                    date.getFullYear()
+                  );
+                }}
                 styles={halfWidthInput}
                 label="Date"
                 onSelectDate={(date) => {
@@ -2615,8 +2898,10 @@ const NWFQuoteForm = (props) => {
                     <TextField
                       key={milestone.id}
                       id={`${milestone.id}`}
-                      styles={halfWidthInput}
+                      // styles={halfWidthInput}
                       value={milestone.description}
+                      multiline
+                      autoAdjustHeight
                       onChange={(e) => {
                         arrMilestones.filter(
                           (item) => item.id == +e.target["id"]
@@ -2626,11 +2911,27 @@ const NWFQuoteForm = (props) => {
                     />
                   </td>
                   <td>
-                    <div style={{ display: "flex", alignItems: "center" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
                       <DatePicker
+                        formatDate={(date: Date): string => {
+                          return (
+                            date.getMonth() +
+                            1 +
+                            "/" +
+                            date.getDate() +
+                            "/" +
+                            date.getFullYear()
+                          );
+                        }}
                         key={milestone.id}
                         id={`${milestone.id}`}
-                        styles={{ root: { width: 100 } }}
+                        styles={{ root: { width: 150 } }}
                         firstDayOfWeek={firstDayOfWeek}
                         placeholder="Select a date..."
                         ariaLabel="Select a date"
@@ -2644,7 +2945,17 @@ const NWFQuoteForm = (props) => {
                       />
                       -
                       <DatePicker
-                        styles={{ root: { width: 100 } }}
+                        formatDate={(date: Date): string => {
+                          return (
+                            date.getMonth() +
+                            1 +
+                            "/" +
+                            date.getDate() +
+                            "/" +
+                            date.getFullYear()
+                          );
+                        }}
+                        styles={{ root: { width: 150 } }}
                         firstDayOfWeek={firstDayOfWeek}
                         placeholder="Select a date..."
                         ariaLabel="Select a date"
@@ -2662,7 +2973,6 @@ const NWFQuoteForm = (props) => {
                   </td>
                   <td>
                     <TextField
-                      styles={halfWidthInput}
                       value={milestone.amount}
                       key={milestone.id}
                       id={`${milestone.id}`}

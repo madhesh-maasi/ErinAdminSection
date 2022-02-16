@@ -15,6 +15,7 @@ import {
   defaultDatePickerStrings,
   Checkbox,
   ThemeProvider,
+  IPersonaProps,
 } from "@fluentui/react";
 import {
   ContextualMenu,
@@ -22,12 +23,16 @@ import {
   IIconProps,
 } from "@fluentui/react";
 import { loadTheme, createTheme, Theme } from "@fluentui/react";
-let formID = 0;
+import {
+  PeoplePicker,
+  PrincipalType,
+} from "@pnp/spfx-controls-react/lib/PeoplePicker";
 
+let formID = 0;
 const paramsString = window.location.href.split("?")[1].toLowerCase();
 const searchParams = new URLSearchParams(paramsString);
 searchParams.has("formid") ? (formID = Number(searchParams.get("formid"))) : "";
-
+let ProjectManagerUser = [];
 const fullWidthInput = {
   root: { width: "70%", marginBottom: "0.5rem" },
 };
@@ -167,6 +172,7 @@ const redTheme = createTheme({
     white: "#ffffff",
   },
 });
+
 const WFQuoteForm = (props) => {
   const [projectInfo, setProjectInfo] = useState(objProjInfo);
   const [renderProjInfo, setRenderProjInfo] = useState(false);
@@ -344,16 +350,35 @@ const WFQuoteForm = (props) => {
           // tax Info
           taxesInfo: JSON.stringify(objTaxes),
           Status: "Order in production",
+          WfProjectManagerId:
+            ProjectManagerUser.length > 0
+              ? { results: ProjectManagerUser }
+              : null,
         })
         .then((data) => console.log(data))
         //
-        .catch((error) => console.log(error))
-        .then(() => history.back());
+        .catch((error) => console.log(error));
+      // .then(() => history.back());
     } catch (error) {
       console.log(error);
     }
   };
-
+  async function getProjManager(event): Promise<void> {
+    console.log(event);
+    ProjectManagerUser = [];
+    for (let i = 0; i < event.length; i++) {
+      await props.spcontext.web.siteUsers
+        .getByEmail(event[i].secondaryText.toLowerCase())
+        .get()
+        .then(async function (result): Promise<void> {
+          if (result.Id) ProjectManagerUser.push(result.Id);
+          console.log(ProjectManagerUser);
+        })
+        .catch((error): void => {
+          alert(error);
+        });
+    }
+  }
   return (
     <ThemeProvider
       theme={redTheme}
@@ -394,15 +419,25 @@ const WFQuoteForm = (props) => {
                 setRenderProjInfo(true);
               }}
             />
-            <TextField
-              label="WF Project/Property Manager"
-              styles={halfWidthInput}
-              value={projectInfo.projManagerInput}
-              onChange={(e) => {
-                objProjInfo.projManagerInput = e.target["value"];
-                setRenderProjInfo(true);
-              }}
-            />
+            <ThemeProvider
+              theme={redTheme}
+              className={styles.peoplePickerSection}
+            >
+              <PeoplePicker
+                context={props.cont}
+                titleText="WF Project/Property Manager"
+                personSelectionLimit={1}
+                styles={{ root: { width: "100%" } }}
+                groupName={"WellsFargoGroup"} // Leave this blank in case you want to filter from all users
+                showtooltip={true}
+                required={true}
+                disabled={false}
+                onChange={(e) => getProjManager(e)}
+                showHiddenInUI={false}
+                principalTypes={[PrincipalType.User]}
+                resolveDelay={1000}
+              />
+            </ThemeProvider>
           </div>
           <div style={{ display: "flex" }}>
             <TextField
@@ -447,6 +482,16 @@ const WFQuoteForm = (props) => {
 
           <div style={{ display: "flex" }}>
             <DatePicker
+              formatDate={(date: Date): string => {
+                return (
+                  date.getMonth() +
+                  1 +
+                  "/" +
+                  date.getDate() +
+                  "/" +
+                  date.getFullYear()
+                );
+              }}
               label="Estimate Start Date"
               firstDayOfWeek={firstDayOfWeek}
               placeholder="Select a date..."
@@ -460,6 +505,16 @@ const WFQuoteForm = (props) => {
               }}
             />
             <DatePicker
+              formatDate={(date: Date): string => {
+                return (
+                  date.getMonth() +
+                  1 +
+                  "/" +
+                  date.getDate() +
+                  "/" +
+                  date.getFullYear()
+                );
+              }}
               label="Estimate End Date"
               firstDayOfWeek={firstDayOfWeek}
               placeholder="Select a date..."
@@ -894,6 +949,49 @@ const WFQuoteForm = (props) => {
                 </tr>
               );
             })}
+          </tbody>
+        </table>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            margin: "1rem 0",
+          }}
+        >
+          {" "}
+          <DefaultButton
+            text="Add"
+            iconProps={addIcon}
+            styles={{ root: { marginLeft: "auto", textAlign: "right" } }}
+            onClick={() => {
+              addInstallationRowhandler();
+              console.log(arrInstall);
+              setInstallationTable(arrInstall);
+            }}
+          />
+        </div>
+        <table className={styles.installationTbl}>
+          <thead>
+            <tr>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
             <tr>
               <td colSpan={7}>
                 <div style={{ width: "3rem", marginLeft: "auto" }}>
@@ -920,16 +1018,6 @@ const WFQuoteForm = (props) => {
             </tr>
           </tbody>
         </table>
-        <DefaultButton
-          text="Add"
-          iconProps={addIcon}
-          styles={{ root: { marginLeft: "auto", textAlign: "right" } }}
-          onClick={() => {
-            addInstallationRowhandler();
-            console.log(arrInstall);
-            setInstallationTable(arrInstall);
-          }}
-        />
       </div>
 
       <div
@@ -1394,4 +1482,5 @@ const WFQuoteForm = (props) => {
     </ThemeProvider>
   );
 };
+
 export default WFQuoteForm;

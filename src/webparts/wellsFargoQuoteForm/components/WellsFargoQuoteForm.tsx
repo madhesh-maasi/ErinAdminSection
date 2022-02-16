@@ -6,6 +6,8 @@ import "../../../ExternalRef/css/style.css";
 import { sp } from "@pnp/sp/presets/all";
 import { graph } from "@pnp/graph/presets/all";
 import WFQuoteForm from "./WFQuoteForm";
+import Peoples from "./WFPeoples";
+
 export default class WellsFargoQuoteForm extends React.Component<
   IWellsFargoQuoteFormProps,
   {}
@@ -20,6 +22,13 @@ export default class WellsFargoQuoteForm extends React.Component<
     });
   }
   public render(): React.ReactElement<IWellsFargoQuoteFormProps> {
-    return <WFQuoteForm spcontext={sp} />;
+    return (
+      /*<WFQuoteForm
+        spcontext={sp}
+        cont={this.props.context}
+        graphcontext={graph}
+      />*/
+      <Peoples spcontext={sp} cont={this.props.context} />
+    );
   }
 }
