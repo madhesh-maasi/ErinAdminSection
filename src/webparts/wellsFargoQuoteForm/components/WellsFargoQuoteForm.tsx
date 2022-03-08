@@ -23,12 +23,12 @@ export default class WellsFargoQuoteForm extends React.Component<
   }
   public render(): React.ReactElement<IWellsFargoQuoteFormProps> {
     return (
-      /*<WFQuoteForm
+      <WFQuoteForm
         spcontext={sp}
         cont={this.props.context}
         graphcontext={graph}
-      />*/
-      <Peoples spcontext={sp} cont={this.props.context} />
+      />
+      // <Peoples spcontext={sp} cont={this.props.context} />
     );
   }
 }

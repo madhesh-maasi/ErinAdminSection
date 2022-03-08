@@ -21,6 +21,6 @@ export default class AdminDashboard extends React.Component<
   }
 
   public render(): React.ReactElement<IAdminDashboardProps> {
-    return <App spcontext={sp} graphcontext={graph} />;
+    return <App spcontext={sp} graphcontext={graph} context={this.props.context}/>;
   }
 }

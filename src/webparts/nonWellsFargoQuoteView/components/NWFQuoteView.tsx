@@ -121,10 +121,11 @@ const myTheme = createTheme({
     white: "#ffffff",
   },
 });
-loadTheme(myTheme);
+
 let arrSentViaOptions = [];
 let arrTypesOfProposal = [];
 const NWFQuoteView = (props) => {
+  loadTheme(myTheme);
   const [firstDayOfWeek, setFirstDayOfWeek] = useState(DayOfWeek.Sunday);
   const [selectedKey, setSelectedKey] = useState(1);
   const [milestones, setMilestones] = useState(arrMilestones);
@@ -144,7 +145,7 @@ const NWFQuoteView = (props) => {
   };
   useEffect(() => {
     props.spcontext.web.lists
-      .getByTitle("NWFQuoteRequestList")
+      .getByTitle("GeneralQuoteRequestList")
       .fields.filter("EntityPropertyName eq 'SentVia'")
       .get()
       .then((SentVia) => {
@@ -157,7 +158,7 @@ const NWFQuoteView = (props) => {
       });
     setSentViaOptions(arrSentViaOptions);
     props.spcontext.web.lists
-      .getByTitle("NWFQuoteRequestList")
+      .getByTitle("GeneralQuoteRequestList")
       .fields.filter("EntityPropertyName eq 'TypesOfProposal'")
       .get()
       .then((types) => {
@@ -170,7 +171,7 @@ const NWFQuoteView = (props) => {
         setTypesOfProposalOptions(arrTypesOfProposal);
       });
     props.spcontext.web.lists
-      .getByTitle("NWFQuoteRequestList")
+      .getByTitle("GeneralQuoteRequestList")
       .items.getById(formID)
       .get()
       .then((li: any) => {

@@ -177,7 +177,7 @@ let arrPartsCount = {
   SkyFoundry: 0,
   TridiumAnalytics: 0,
 };
-loadTheme(myTheme);
+
 const halfWidthInput = {
   root: { width: 300, margin: "0 1rem 0.5rem 0" },
 };
@@ -185,6 +185,7 @@ let arrSentViaOptions = [];
 let arrTypesOfProposal = [];
 
 const NWFQuoteForm = (props) => {
+  loadTheme(myTheme);
   const [firstDayOfWeek, setFirstDayOfWeek] = useState(DayOfWeek.Sunday);
   const [selectedKey, setSelectedKey] = useState(1);
   const [milestones, setMilestones] = useState(arrMilestones);
@@ -203,7 +204,7 @@ const NWFQuoteForm = (props) => {
 
   useEffect(() => {
     props.spcontext.web.lists
-      .getByTitle("NWFQuoteRequestList")
+      .getByTitle("GeneralQuoteRequestList")
       .fields.filter("EntityPropertyName eq 'SentVia'")
       .get()
       .then((SentVia) => {
@@ -216,7 +217,7 @@ const NWFQuoteForm = (props) => {
       });
     setSentViaOptions(arrSentViaOptions);
     props.spcontext.web.lists
-      .getByTitle("NWFQuoteRequestList")
+      .getByTitle("GeneralQuoteRequestList")
       .fields.filter("EntityPropertyName eq 'TypesOfProposal'")
       .get()
       .then((types) => {
@@ -231,7 +232,7 @@ const NWFQuoteForm = (props) => {
         setTypesOfProposalOptions(arrTypesOfProposal);
       });
     props.spcontext.web.lists
-      .getByTitle("NonWellsFargoParts")
+      .getByTitle("GeneralParts")
       .items.top(5000)
       .get()
       .then((partList: any) => {
@@ -254,7 +255,7 @@ const NWFQuoteForm = (props) => {
       })
       .then(async () => {
         props.spcontext.web.lists
-          .getByTitle("NWFQuoteRequestList")
+          .getByTitle("GeneralQuoteRequestList")
           .items.select("*")
           .getById(formID)
           .get()
@@ -531,7 +532,7 @@ const NWFQuoteForm = (props) => {
   };
   const submitBtnHandler = () => {
     props.spcontext.web.lists
-      .getByTitle("NWFQuoteRequestList")
+      .getByTitle("GeneralQuoteRequestList")
       .items.getById(formID)
       .update({
         AcceptedBy: objValues.AcceptedBy,

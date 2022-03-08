@@ -53,6 +53,7 @@ let siteAbsoluteUrl = `https://${window.location.href.split("/")[2]}`;
 let siteUrl = `https://${window.location.href.split("/")[2]}/sites/${
   window.location.href.split("/")[4]
 }`;
+
 const dropdownStyles: Partial<IDropdownStyles> = {
   dropdown: { width: 300 },
 };
@@ -116,7 +117,7 @@ const options: IChoiceGroupOption[] = [
   { key: "WellsFargo", text: "Wells Fargo" },
   { key: "NonWellsFargo", text: "Non Wells Fargo" },
 ];
-loadTheme(blueTheme);
+
 const modelProps = {
   isBlocking: true,
   topOffsetFixed: true,
@@ -124,6 +125,8 @@ const modelProps = {
 };
 
 const App = (props) => {
+  loadTheme(blueTheme);
+  let siteURL = props.context.pageContext.web.absoluteUrl;
   const [items, setItems] = useState([]);
   const [fetchList, setFetchList] = useState(false);
   const [hideDialog, { toggle: toggleHideDialog }] = useBoolean(true);
@@ -168,7 +171,7 @@ const App = (props) => {
           .orderBy("Modified", false)
           .get()
           .then((wfItems: any) => {
-            console.log(wfItems);
+            allItems=[];
             wfItems.forEach((wfItem) => {
               allItems.push({
                 ID: wfItem.ID,
@@ -191,7 +194,7 @@ const App = (props) => {
           })
           .then(async () => {
             await props.spcontext.web.lists
-              .getByTitle("NWFQuoteRequestList")
+              .getByTitle("GeneralQuoteRequestList")
               .items.select("*,UserDetails/Title,UserDetails/EMail")
               .expand("UserDetails")
               .orderBy("Modified", false)
@@ -269,7 +272,7 @@ const App = (props) => {
                     .getByTitle(
                       lItem.ClientName == "Wells Fargo"
                         ? "WFQuoteRequestList"
-                        : "NWFQuoteRequestList"
+                        : "GeneralQuoteRequestList"
                     )
                     .items.getById(lItem.ID)
                     .update({
@@ -325,8 +328,8 @@ const App = (props) => {
                 onClick={() => {
                   console.log(lItem.ID);
                   lItem.ClientName == "Wells Fargo"
-                    ? (window.location.href = `https://chandrudemo.sharepoint.com/sites/LynxSpring/SitePages/WellsFargoQuoteForm.aspx?formID=${lItem.ID}`)
-                    : (window.location.href = `https://chandrudemo.sharepoint.com/sites/LynxSpring/SitePages/NonWellsFargoQuoteForm.aspx?formID=${lItem.ID}`);
+                    ? (window.location.href = `${siteURL}/SitePages/WellsFargoQuoteForm.aspx?formID=${lItem.ID}`)
+                    : (window.location.href = `${siteURL}/SitePages/GeneralQuoteForm.aspx?formID=${lItem.ID}`);
                 }}
                 allowDisabledFocus
               />
@@ -336,8 +339,8 @@ const App = (props) => {
                   iconName="PageData"
                   onClick={() => {
                     lItem.ClientName == "Wells Fargo"
-                      ? (window.location.href = `https://chandrudemo.sharepoint.com/sites/LynxSpring/SitePages/WellsFargoQuoteView.aspx?formID=${lItem.ID}`)
-                      : (window.location.href = `https://chandrudemo.sharepoint.com/sites/LynxSpring/SitePages/NonWellsFargoQuoteView.aspx?formID=${lItem.ID}`);
+                      ? (window.location.href = `${siteURL}/SitePages/WellsFargoQuoteView.aspx?formID=${lItem.ID}`)
+                      : (window.location.href = `${siteURL}/SitePages/GeneralQuoteView.aspx?formID=${lItem.ID}`);
                   }}
                   styles={{
                     root: {
@@ -367,8 +370,8 @@ const App = (props) => {
               }}
               onClick={() => {
                 lItem.ClientName == "Wells Fargo"
-                  ? (window.location.href = `https://chandrudemo.sharepoint.com/sites/LynxSpring/SitePages/InternalForm.aspx?RequestType=WF&RequestId=${lItem.ID}`)
-                  : (window.location.href = `https://chandrudemo.sharepoint.com/sites/LynxSpring/SitePages/InternalForm.aspx?RequestType=NWF&RequestId=${lItem.ID}`);
+                  ? (window.location.href = `${siteURL}/SitePages/InternalForm.aspx?RequestType=WF&RequestId=${lItem.ID}`)
+                  : (window.location.href = `${siteURL}/SitePages/InternalForm.aspx?RequestType=NWF&RequestId=${lItem.ID}`);
               }}
             />
           ),
@@ -402,6 +405,7 @@ const App = (props) => {
           ),
         };
       });
+      setItems([]);
       setItems(constructedItems);
       setFetchList(false);
       paginate(1);
@@ -647,7 +651,7 @@ const App = (props) => {
               onClick={() => {
                 props.spcontext.web.lists
                   .getByTitle(
-                    isWFItem ? "WFQuoteRequestList" : "NWFQuoteRequestList"
+                    isWFItem ? "WFQuoteRequestList" : "GeneralQuoteRequestList"
                   )
                   .items.getById(+currID)
                   .update({
